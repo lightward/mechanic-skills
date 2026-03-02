@@ -1,0 +1,5 @@
+.DS_Store
+CLAUDE.md
+.agents/
+.claude/
+skills-lock.json

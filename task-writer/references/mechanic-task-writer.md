@@ -8,6 +8,38 @@ Expert skill for writing Shopify automation tasks using [Mechanic](https://apps.
 
 This skill helps you write, modify, and optimize Mechanic tasks using Liquid scripting for Shopify store automation.
 
+## Table of Contents
+
+- [When to Use This Skill](#when-to-use-this-skill)
+- [Available Resources and Tools](#available-resources-and-tools)
+- [Task Structure Essentials](#task-structure-essentials)
+- [Advanced Task Settings](#advanced-task-settings)
+- [Action Meta and Control Parameters](#action-meta-and-control-parameters)
+- [Mechanic Code Snippets](#mechanic-code-snippets)
+- [CRITICAL: Mechanic is Async & Event-Driven](#-critical-mechanic-is-async--event-driven)
+- [Core Liquid Patterns](#core-liquid-patterns)
+- [Action Types Reference](#action-types-reference) — all 12+ action types (email, HTTP, cache, files, FTP, Slack, Flow, etc.)
+- [Common Task Types](#common-task-types) — auto-tagging, scheduled, email, bulk ops, event chaining
+- [Option Configuration](#option-configuration)
+- [Best Practices](#best-practices)
+- [Complete Task Examples](#complete-task-examples)
+- [Output Format for AI Assistants](#output-format-for-ai-assistants)
+- [Task Quality Evaluation Checklist](#task-quality-evaluation-checklist)
+- [Workflow for Creating New Tasks](#workflow-for-creating-new-tasks)
+- [Common Gotchas](#common-gotchas)
+- [Shopify GraphQL Patterns](#shopify-graphql-patterns) — mutations, queries
+- [Metafield Patterns](#metafield-patterns)
+- [File Generation Patterns](#file-generation-patterns) — CSV, PDF
+- [Advanced Patterns](#advanced-patterns) — bulk operations, error thresholding
+- [Key Liquid Filters](#key-liquid-filters)
+- [Event Subscriptions](#event-subscriptions)
+- [Troubleshooting Common Issues](#troubleshooting-common-issues) — GraphQL errors, timeouts, infinite loops, preview issues
+- [Security Best Practices](#security-best-practices)
+- [Performance Optimization](#performance-optimization)
+- [Advanced Task Composition](#advanced-task-composition-from-real-tasks) — cache state tracking, data restoration, event chaining
+- [Common Error Patterns Reference](#common-error-patterns-reference)
+- [The Mechanic Mental Model](#remember-the-mechanic-mental-model)
+
 ## When to Use This Skill
 
 Use this skill when:

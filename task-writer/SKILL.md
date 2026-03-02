@@ -37,6 +37,8 @@ Shopify, built by Lightward. Your job is to write complete, production-ready Mec
 }
 ```
 
+**Note:** The `tags` field is only used for task library submissions (categorization on tasks.mechanic.dev). User-created tasks don't need it — omit it unless you're contributing to the library.
+
 ### Options Format Rule
 
 Options values MUST be plain values: `null`, strings, numbers, or booleans. **Never** use objects with `description` keys. The option suffix provides all the metadata Mechanic needs.
@@ -50,6 +52,26 @@ Options values MUST be plain values: `null`, strings, numbers, or booleans. **Ne
   "states__array_required": null
 }
 ```
+
+### Option Display Order
+
+Options appear in the Mechanic UI in the order they're first referenced in script comments. Use this pattern to control the order:
+
+```liquid
+{% comment %}
+  Option order:
+
+  {{ options.first_option__required }}
+  {{ options.second_option__number }}
+  {{ options.third_option__boolean }}
+{% endcomment %}
+```
+
+## Webhook Payloads and event.data
+
+When a Shopify webhook fires (e.g. `shopify/orders/create`), the webhook payload is available as `event.data`. Mechanic also assigns the top-level resource directly — so for an order webhook, `order` is automatically set to the webhook payload hash. This means you can write `order.name` or `order.admin_graphql_api_id` without any explicit assignment.
+
+For non-webhook events (like `mechanic/user/trigger` or `mechanic/scheduler/daily`), `event.data` is empty — there's no resource payload. Tasks on these events must query Shopify directly for the data they need.
 
 ## The #1 Rule: Async vs Sync
 
@@ -94,7 +116,7 @@ This is the single most common source of errors in Mechanic tasks:
 ## Task Writing Workflow
 
 1. **Understand the trigger** — what Shopify event starts this? (order created, product updated, daily schedule, manual run?)
-2. **Check for existing tasks** — search https://tasks.mechanic.dev or use the Mechanic MCP if available (`mcp__mechanic-mcp__search_tasks`)
+2. **Search existing tasks FIRST** — there are 359+ production tasks at https://tasks.mechanic.dev. Most requests are variations of something that already exists. Starting from a real task is faster and more reliable than writing from scratch. Use the Mechanic MCP if available (`mcp__mechanic-mcp__search_tasks`) or browse the library directly.
 3. **Read the relevant reference** — see Reference Files section below
 4. **Write the complete JSON** with preview mode, logging, and error handling
 5. **Quality-check** against the checklist at the bottom of this file
@@ -475,8 +497,9 @@ For tasks that mutate data, add a `test_mode__boolean` option. In test mode, use
 | `shopify/products/update` | Product edited |
 | `shopify/customers/create` | New customer |
 | `shopify/inventory_levels/update` | Stock changed |
-| `mechanic/scheduler/daily` | Every day at midnight |
+| `mechanic/scheduler/daily` | Every day at midnight (shop timezone) |
 | `mechanic/scheduler/hourly` | Every hour |
+| `mechanic/scheduler/10min` | Every 10 minutes |
 | `mechanic/user/trigger` | Manual "Run task" button |
 | `mechanic/actions/perform` | After an action completes |
 | `mechanic/shopify/bulk_operation` | Bulk operation results ready |
