@@ -1,0 +1,140 @@
+{
+  "templates": {
+    "auto_tag_order": {
+      "name": "Auto-tag orders template",
+      "description": "Basic template for auto-tagging orders based on conditions",
+      "script": "{% if event.preview %}\n  {% assign order = hash %}\n  {% assign order[\"admin_graphql_api_id\"] = \"gid://shopify/Order/1234567890\" %}\n  {% assign order[\"name\"] = \"#1001\" %}\n  {% comment %} Add more preview fields as needed {% endcomment %}\n{% endif %}\n\n{% assign tag_to_add = options.tag__required %}\n\n{% if CONDITION_HERE %}\n  {% unless options.test_mode__boolean %}\n    {% action \"shopify\" %}\n      mutation {\n        tagsAdd(\n          id: {{ order.admin_graphql_api_id | json }}\n          tags: {{ tag_to_add | json }}\n        ) {\n          userErrors { field message }\n        }\n      }\n    {% endaction %}\n  {% else %}\n    {% action \"echo\" order_name: order.name, tag: tag_to_add, action: \"would tag order\" %}\n  {% endunless %}\n  \n  {% log message: \"Tagged order\", order: order.name, tag: tag_to_add %}\n{% else %}\n  {% log message: \"Condition not met, skipping\", order: order.name %}\n{% endif %}"
+    },
+    "email_notification": {
+      "name": "Email notification template",
+      "description": "Template for sending customizable email notifications",
+      "script": "{% assign email_subject = options.email_subject__required %}\n{% assign email_body = options.email_body__multiline_required %}\n\n{% comment %} Replace placeholders {% endcomment %}\n{% assign email_subject = email_subject | replace: \"PLACEHOLDER\", value %}\n{% assign email_body = email_body | replace: \"PLACEHOLDER\", value %}\n\n{% action \"email\" %}\n  {\n    \"to\": {{ recipient_email | json }},\n    \"subject\": {{ email_subject | strip | json }},\n    \"body\": {{ email_body | strip | newline_to_br | json }},\n    \"from_display_name\": {{ shop.name | json }},\n    \"reply_to\": {{ shop.customer_email | json }}\n  }\n{% endaction %}"
+    },
+    "bulk_operation": {
+      "name": "Bulk operation template",
+      "description": "Template for processing large datasets with bulk operations",
+      "script": "{% if event.topic == \"mechanic/user/trigger\" %}\n  {% capture bulk_operation_query %}\n    query {\n      products(query: \"YOUR_QUERY\") {\n        edges {\n          node {\n            __typename\n            id\n            title\n          }\n        }\n      }\n    }\n  {% endcapture %}\n\n  {% action \"shopify\" %}\n    mutation {\n      bulkOperationRunQuery(\n        query: {{ bulk_operation_query | json }}\n      ) {\n        bulkOperation { id status }\n        userErrors { field message }\n      }\n    }\n  {% endaction %}\n{% elsif event.topic == \"mechanic/shopify/bulk_operation\" %}\n  {% if event.preview %}\n    {% capture bulkOperation_objects_jsonl %}\n      {\"__typename\":\"Product\",\"id\":\"gid://shopify/Product/1234567890\",\"title\":\"Sample Product\"}\n    {% endcapture %}\n    {% assign bulkOperation = hash %}\n    {% assign bulkOperation[\"objects\"] = bulkOperation_objects_jsonl | parse_jsonl %}\n  {% endif %}\n\n  {% assign products = bulkOperation.objects | where: \"__typename\", \"Product\" %}\n  \n  {% for product in products %}\n    {% comment %} Process each product {% endcomment %}\n    {% log product: product.title %}\n  {% endfor %}\n{% endif %}"
+    },
+    "daily_reset_cache": {
+      "name": "Daily reset with cache template",
+      "description": "Track daily counts with automatic midnight reset",
+      "script": "{% assign cache_key = \"daily_count:\" | append: task.id %}\n{% assign count_today = cache[cache_key] | default: 0 %}\n\n{% if event.topic == \"shopify/orders/create\" %}\n  {% assign count_today = count_today | plus: 1 %}\n  {% action \"cache\", \"set\", cache_key, count_today %}\n  \n  {% log daily_count: count_today %}\n  \n  {% if count_today >= options.maximum_daily_orders__number_required %}\n    {% comment %} Send alert {% endcomment %}\n  {% endif %}\n{% elsif event.topic == \"mechanic/scheduler/daily\" %}\n  {% action \"cache\", \"del\", cache_key %}\n  {% log message: \"Daily counter reset\" %}\n{% endif %}"
+    },
+    "status_report": {
+      "name": "Manual status report template",
+      "description": "On-demand reports via mechanic/user/trigger",
+      "script": "{% assign previous_midnight = \"now\" | date: \"%Y-%m-%dT00:00:00%z\" %}\n\n{% if event.topic == \"mechanic/user/trigger\" or event.preview %}\n  {% capture query %}\n    query {\n      orders(\n        first: 250\n        query: \"created_at:>={{ previous_midnight | json }}\"\n      ) {\n        nodes { id name totalPriceSet { shopMoney { amount } } }\n      }\n    }\n  {% endcapture %}\n  \n  {% assign result = query | shopify %}\n  {% assign orders = result.data.orders.nodes %}\n  \n  {% capture report_html %}\n    <h2>Daily Status Report</h2>\n    <p><strong>Orders today:</strong> {{ orders.size }}</p>\n  {% endcapture %}\n  \n  {% action \"email\" %}\n    {\n      \"to\": {{ shop.email | json }},\n      \"subject\": \"Daily Report - {{ orders.size }} orders\",\n      \"body\": {{ report_html | json }}\n    }\n  {% endaction %}\n{% endif %}"
+    },
+    "resource_picker": {
+      "name": "Shopify resource picker template",
+      "description": "Using product/collection/variant pickers in options",
+      "script": "{% comment %}\n  Options:\n  {{ options.product_to_monitor__picker_product__required }}\n  {{ options.collections_to_sync__picker_collection_array }}\n{% endcomment %}\n\n{% assign product_id = options.product_to_monitor__picker_product__required %}\n\n{% capture query %}\n  query {\n    product(id: {{ product_id | json }}) {\n      id\n      title\n      variants(first: 250) {\n        nodes { id sku inventoryQuantity }\n      }\n    }\n  }\n{% endcapture %}\n\n{% assign result = query | shopify %}\n{% assign product = result.data.product %}\n\n{% log product_title: product.title, variant_count: product.variants.nodes.size %}"
+    },
+    "multi_recipient_email": {
+      "name": "Multi-recipient email loop template",
+      "description": "Send to multiple recipients from email array",
+      "script": "{% comment %}\n  {{ options.notification_recipients__email_array_required }}\n{% endcomment %}\n\n{% for recipient in options.notification_recipients__email_array_required %}\n  {% action \"email\" %}\n    {\n      \"to\": {{ recipient | json }},\n      \"subject\": {{ subject | strip | json }},\n      \"body\": {{ body | strip | newline_to_br | json }},\n      \"from_display_name\": {{ shop.name | json }},\n      \"reply_to\": {{ shop.customer_email | json }}\n    }\n  {% endaction %}\n{% endfor %}\n\n{% log recipient_count: options.notification_recipients__email_array_required.size %}"
+    }
+  },
+  "evaluation_criteria": {
+    "required": [
+      "Uses GraphQL not REST",
+      "Includes preview mode data",
+      "Has error handling",
+      "Includes logging",
+      "Proper ID formatting with namespace"
+    ],
+    "recommended": [
+      "Pagination for large datasets",
+      "Test mode option",
+      "Caching where beneficial",
+      "Loop prevention",
+      "Placeholder pattern for emails"
+    ],
+    "quality_indicators": [
+      "Clear task name",
+      "Comprehensive documentation",
+      "Sensible default options",
+      "Efficient queries",
+      "Proper error messages"
+    ]
+  },
+  "common_patterns": {
+    "placeholder_replacement": {
+      "description": "Convert values to strings and replace placeholders",
+      "code": "{% assign value_string = value | json | remove: '\"' %}\n{% assign text = text | replace: \"PLACEHOLDER\", value_string %}"
+    },
+    "pagination": {
+      "description": "Paginate through large result sets",
+      "code": "{% for n in (1..100) %}\n  {% capture query %}\n    query {\n      resource(first: 250, after: {{ cursor | json }}) {\n        pageInfo { hasNextPage endCursor }\n        nodes { id }\n      }\n    }\n  {% endcapture %}\n  {% assign result = query | shopify %}\n  {% if result.data.resource.pageInfo.hasNextPage == false %}\n    {% break %}\n  {% endif %}\n  {% assign cursor = result.data.resource.pageInfo.endCursor %}\n{% endfor %}"
+    },
+    "error_checking": {
+      "description": "Check for GraphQL errors",
+      "code": "{% if result.data.mutation.userErrors != empty %}\n  {% error message: \"Operation failed\", errors: result.data.mutation.userErrors %}\n{% endif %}"
+    },
+    "loop_prevention": {
+      "description": "Prevent infinite action loops",
+      "code": "{% if resource.tags contains \"processed-by-mechanic\" %}\n  {% log \"Already processed, skipping\" %}\n  {% break %}\n{% endif %}"
+    },
+    "cache_daily_reset": {
+      "description": "Reset cache key daily for counters",
+      "code": "{% if event.topic == 'mechanic/scheduler/daily' %}\n  {% action 'cache', 'del', cache_key %}\n  {% log message: 'Daily cache reset', cache_key: cache_key %}\n{% endif %}"
+    },
+    "multi_recipient_email": {
+      "description": "Send to multiple recipients from array option",
+      "code": "{% for recipient in options.email_recipients__email_array_required %}\n  {% action 'email' %}\n    {\n      \"to\": {{ recipient | json }},\n      \"subject\": {{ subject | strip | json }},\n      \"body\": {{ body | strip | newline_to_br | json }}\n    }\n  {% endaction %}\n{% endfor %}"
+    },
+    "option_order": {
+      "description": "Control option display order",
+      "code": "{% comment %}\n  Option order:\n\n  {{ options.first_option__required }}\n  {{ options.second_option__number }}\n  {{ options.third_option__boolean }}\n{% endcomment %}"
+    },
+    "action_meta": {
+      "description": "Track workflow state with action metadata",
+      "code": "{% assign meta = hash %}\n{% assign meta[\"stage\"] = \"initial\" %}\n{% assign meta[\"order_id\"] = order.id %}\n{% action \"http\", __meta: meta %}\n  { \"method\": \"post\", \"url\": \"...\" }\n{% endaction %}"
+    },
+    "percentage_calculation": {
+      "description": "Calculate percentage thresholds",
+      "code": "{% assign threshold_percentage = options.alert_percentage__range_min50_max95 | default: 80 %}\n{% assign threshold_count = max_value | times: threshold_percentage | divided_by: 100.0 | ceil %}"
+    },
+    "dynamic_query_building": {
+      "description": "Build Shopify search queries dynamically",
+      "code": "{% capture query %}\n  created_at:>={{ start_date | json }}\n{% endcapture %}\n{% if options.exclude_cancelled__boolean %}\n  {% capture query %}{{ query }} -status:cancelled{% endcapture %}\n{% endif %}\n{% assign query = query | strip %}"
+    }
+  },
+  "test_commands": {
+    "validate_schema": "npm test",
+    "build_docs": "npm run build",
+    "search_tasks": "mcp__mechanic-mcp__search_tasks query:\"YOUR_QUERY\"",
+    "get_task": "mcp__mechanic-mcp__get_task id:\"TASK_HANDLE\"",
+    "platform_test": "Test in Mechanic platform using preview mode"
+  },
+  "shopify_graphql_references": {
+    "common_mutations": [
+      "tagsAdd",
+      "tagsRemove",
+      "productUpdate",
+      "orderEditBegin",
+      "customerUpdate",
+      "metafieldsSet",
+      "bulkOperationRunQuery"
+    ],
+    "common_queries": [
+      "product",
+      "products",
+      "order",
+      "orders",
+      "customer",
+      "customers",
+      "inventory",
+      "locations"
+    ],
+    "id_namespaces": {
+      "product": "gid://shopify/Product/",
+      "order": "gid://shopify/Order/",
+      "customer": "gid://shopify/Customer/",
+      "variant": "gid://shopify/ProductVariant/",
+      "lineItem": "gid://shopify/LineItem/",
+      "location": "gid://shopify/Location/"
+    }
+  }
+}
