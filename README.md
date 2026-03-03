@@ -8,7 +8,7 @@ These skills work with any coding agent that supports the [Agent Skills](https:/
 
 | Skill | Description |
 |-------|-------------|
-| [task-writer](./task-writer/) | Write, edit, debug, and optimize Mechanic tasks with production-ready patterns, GraphQL queries, and bulk operations |
+| [mechanic-task-writer](./mechanic-task-writer/) | Write, edit, debug, and optimize Mechanic tasks with production-ready patterns, GraphQL queries, and bulk operations |
 
 ## Installation
 
@@ -21,7 +21,7 @@ npx skills add lightward/mechanic-skills
 Install a specific skill:
 
 ```bash
-npx skills add lightward/mechanic-skills --skill task-writer
+npx skills add lightward/mechanic-skills --skill mechanic-task-writer
 ```
 
 Or manually copy the skill folder to your agent's skills directory:
@@ -43,10 +43,12 @@ Mechanic has a public MCP server that provides access to the task library and do
 
 ## Resources
 
+- [Mechanic](https://mechanic.dev/) — install from the [Shopify App Store](https://apps.shopify.com/mechanic)
 - [Mechanic Task Library](https://tasks.mechanic.dev) — 359+ production-ready tasks
 - [Mechanic Documentation](https://learn.mechanic.dev)
 - [Mechanic Tasks GitHub](https://github.com/lightward/mechanic-tasks)
 - [Shopify GraphQL API](https://shopify.dev/docs/api/admin-graphql)
+- [Shopify Dev MCP](https://shopify.dev/docs/apps/build/devmcp)
 
 ## License
 
