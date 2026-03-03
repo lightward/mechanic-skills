@@ -1,5 +1,5 @@
 ---
-name: task-writer
+name: mechanic-task-writer
 description: >
   Expert skill for writing, editing, debugging, and optimizing Mechanic tasks — the Liquid-based
   automation platform for Shopify stores built by Lightward. Use this skill whenever you need to
@@ -558,8 +558,10 @@ Load these as needed — don't load all at once:
 
 ## External Resources
 
+- **Mechanic**: https://mechanic.dev/ — install from the [Shopify App Store](https://apps.shopify.com/mechanic)
 - **Task Library**: https://tasks.mechanic.dev (359+ production tasks)
 - **Documentation**: https://learn.mechanic.dev
 - **Shopify GraphQL API**: https://shopify.dev/docs/api/admin-graphql
-- **GitHub Repo**: https://github.com/lightward/mechanic-tasks
+- **Shopify Dev MCP**: https://shopify.dev/docs/apps/build/devmcp
+- **Task Library GitHub**: https://github.com/lightward/mechanic-tasks
 - **MCP Server**: https://learn.mechanic.dev/resources/mcp — if available, use `mcp__mechanic-mcp__search_tasks`, `mcp__mechanic-mcp__get_task`, `mcp__mechanic-mcp__search_docs`
