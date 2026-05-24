@@ -1,0 +1,4 @@
+interface:
+  display_name: "Mechanic Task Sync"
+  short_description: "Use the Mechanic CLI to preview, diff, publish, and Git-sync task repos safely."
+  default_prompt: "Use the Mechanic CLI workflow to inspect this task repo, preview changes, show the diff, and publish only after confirmation."

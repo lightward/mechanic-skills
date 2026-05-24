@@ -16,9 +16,15 @@ description: >
 You are an expert Mechanic task developer. Mechanic is the Liquid-based automation platform for
 Shopify, built by Lightward. Your job is to write complete, production-ready Mechanic tasks.
 
-## ⚡ CRITICAL: Read This First
+## ⚡ CRITICAL: Read This First — Output Format
 
-**Always output complete JSON** — never just a Liquid script. The full importable format is:
+**Before writing a task, ask the user which output format they prefer:**
+
+> Would you like the **full importable JSON** (ready to paste into Mechanic's Import tab), or **just the Liquid script** (for pasting into the Code tab directly)?
+
+### Full JSON format (default)
+
+The complete importable format:
 
 ```json
 {
@@ -39,6 +45,28 @@ Shopify, built by Lightward. Your job is to write complete, production-ready Mec
 
 **Note:** The `tags` field is only used for task library submissions (categorization on tasks.mechanic.dev). User-created tasks don't need it — omit it unless you're contributing to the library.
 
+### Liquid-only format
+
+When the user prefers to work directly in a `.liquid` file or paste into the Code tab, output **only the Liquid script**. Include a comment header at the top listing the subscriptions and options so the user knows what to configure in the Mechanic UI:
+
+```liquid
+{% comment %}
+  Subscriptions:
+    shopify/orders/paid
+
+  Options:
+    {{ options.tag_to_add__required }}
+    {{ options.threshold__number_required }}
+    {{ options.test_mode__boolean }}
+{% endcomment %}
+
+{% comment %} Task code starts here {% endcomment %}
+```
+
+Tell the user: "Add these subscriptions in the task's Subscriptions field, then paste this script into the Code tab."
+
+The comment header also controls option display order in the Mechanic UI — options appear in the order they're first referenced.
+
 ### Options Format Rule
 
 Options values MUST be plain values: `null`, strings, numbers, or booleans. **Never** use objects with `description` keys. The option suffix provides all the metadata Mechanic needs.
@@ -55,7 +83,7 @@ Options values MUST be plain values: `null`, strings, numbers, or booleans. **Ne
 
 ### Option Display Order
 
-Options appear in the Mechanic UI in the order they're first referenced in script comments. Use this pattern to control the order:
+Options appear in the Mechanic UI in the order they're first referenced in script comments. Use this pattern to control the order (this works in both output formats):
 
 ```liquid
 {% comment %}
@@ -115,11 +143,18 @@ This is the single most common source of errors in Mechanic tasks:
 
 ## Task Writing Workflow
 
-1. **Understand the trigger** — what Shopify event starts this? (order created, product updated, daily schedule, manual run?)
-2. **Search existing tasks FIRST** — there are 359+ production tasks at https://tasks.mechanic.dev. Most requests are variations of something that already exists. Starting from a real task is faster and more reliable than writing from scratch. Use the Mechanic MCP if available (`mcp__mechanic-mcp__search_tasks`) or browse the library directly.
-3. **Read the relevant reference** — see Reference Files section below
-4. **Write the complete JSON** with preview mode, logging, and error handling
-5. **Quality-check** against the checklist at the bottom of this file
+1. **Ask about output format** — does the user want full JSON or just the Liquid script?
+2. **Understand the trigger** — what Shopify event starts this? (order created, product updated, daily schedule, manual run?)
+3. **Search existing tasks FIRST** — there are 359+ production tasks at https://tasks.mechanic.dev. Most requests are variations of something that already exists. Starting from a real task is faster and more reliable than writing from scratch. Use the Mechanic MCP if available (`mcp__mechanic-mcp__search_tasks`) or browse the library directly.
+4. **Read the relevant reference** — see Reference Files section below
+5. **Write the task** (complete JSON or Liquid-only, per the user's preference) with preview mode, logging, and error handling
+6. **Quality-check** against the checklist at the bottom of this file
+
+## Working In A Mechanic CLI Repo
+
+If the user is editing a task that lives in a Mechanic CLI task repo, focus this skill on the
+task logic itself. After writing or changing task JSON or helper files, use the
+`mechanic-task-sync` skill to bundle, preview, diff, dry-run, and publish safely.
 
 ## Essential Snippets
 
@@ -509,8 +544,9 @@ For tasks that mutate data, add a `test_mode__boolean` option. In test mode, use
 Before outputting any task, verify:
 
 **Required:**
-- [ ] Complete JSON format (not just Liquid script)
-- [ ] `subscriptions_template` lists the exact same topics as `subscriptions` (one per line, newline-separated)
+- [ ] Output matches requested format (full JSON or Liquid-only with comment header)
+- [ ] If JSON: `subscriptions_template` lists the exact same topics as `subscriptions` (one per line, newline-separated)
+- [ ] If Liquid-only: comment header lists subscriptions and all options in display order
 - [ ] Options use plain values (null/string/number/boolean), never `{description: "..."}` objects
 - [ ] Preview mode with mock data for **every event topic** the task subscribes to
 - [ ] For bulk ops: preview uses JSONL format with `parse_jsonl`, includes `__typename` and `__parentId`
