@@ -2,7 +2,7 @@
 name: mechanic-cli
 description: >
   Use this skill whenever the user is working with the Mechanic CLI, a Mechanic task repo,
-  task sync, task preview, task publish, GitHub Actions sync, API tokens,
+  task sync, task preview, task publish, API tokens,
   bundled/unbundled task helper directories, or commands like mechanic init, mechanic doctor,
   mechanic tasks pull, mechanic tasks status, mechanic tasks preview, mechanic tasks diff,
   mechanic tasks publish, mechanic tasks bundle, mechanic tasks unbundle, or mechanic github init.
@@ -20,18 +20,26 @@ Use user-facing language around `publish`, not `push`, unless you are referring 
 
 ## Default Workflow
 
-Start by understanding the repo state:
+First check whether the repo is initialized.
 
-```bash
-mechanic doctor
-mechanic tasks status
-```
-
-If the repo is not initialized yet:
+If `mechanic.json` is missing:
 
 ```bash
 mechanic init --shop <shop.myshopify.com>
 mechanic tasks pull
+mechanic tasks status
+```
+
+The user needs a Mechanic API token before authenticated commands can pull,
+preview remote tasks, or publish. They create it in Mechanic Settings -> API
+tokens. Paste it during `mechanic init`, or run `mechanic auth login` after
+init. Never print the token, commit it, or store it in repo files.
+
+If `mechanic.json` exists, start by understanding the repo state:
+
+```bash
+mechanic doctor
+mechanic tasks status
 ```
 
 After editing one task:
@@ -95,7 +103,7 @@ approved through the API; they are approved in Mechanic after the task is publis
 - Prefer one-file commands while users are learning or testing.
 - Do not publish when `mechanic tasks status` says a helper needs bundling.
 - Do not ignore token/shop mismatch errors; they mean the API token belongs to another shop.
-- Treat `mechanic tasks diff` differences as information, not a failure, unless the user expects no drift.
+- Treat `mechanic tasks diff` differences as information, not a failure. Use `--exit-code` only when CI or the user explicitly wants differences to fail.
 - New tasks created by publish are disabled; tell the user to review and enable them in Mechanic.
 - Do not expose or log API tokens.
 
@@ -103,7 +111,7 @@ approved through the API; they are approved in Mechanic after the task is publis
 
 GitHub Actions are optional automation, not the first workflow users need to understand.
 
-Use this only when the user asks for GitHub sync, PR validation, scheduled pull-back, or deploy
+Use this only when the user asks for GitHub sync, PR validation, pull-back PRs, or deploy
 from GitHub:
 
 ```bash
@@ -115,7 +123,7 @@ secret. Keep the mental model simple:
 
 - PR validation checks task files.
 - Manual deploy previews/dry-runs first, then publishes when requested.
-- Sync-from-app pulls Mechanic changes into a PR instead of committing directly to `main`.
+- Sync-from-app is manual by default and pulls Mechanic changes into a PR instead of committing directly to `main`.
 
 ## Hand Off To Task Writing
 
