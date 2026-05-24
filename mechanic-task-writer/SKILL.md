@@ -154,7 +154,7 @@ This is the single most common source of errors in Mechanic tasks:
 
 If the user is editing a task that lives in a Mechanic CLI task repo, focus this skill on the
 task logic itself. After writing or changing task JSON or helper files, use the
-`mechanic-task-sync` skill to bundle, preview, diff, dry-run, and publish safely.
+`mechanic-cli` skill to bundle, preview, diff, dry-run, and publish safely.
 
 ## Essential Snippets
 

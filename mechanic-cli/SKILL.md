@@ -1,17 +1,17 @@
 ---
-name: mechanic-task-sync
+name: mechanic-cli
 description: >
   Use this skill whenever the user is working with the Mechanic CLI, a Mechanic task repo,
   task sync, task preview, task publish, GitHub Actions sync, API tokens,
   bundled/unbundled task helper directories, or commands like mechanic init, mechanic doctor,
   mechanic tasks pull, mechanic tasks status, mechanic tasks preview, mechanic tasks diff,
   mechanic tasks publish, mechanic tasks bundle, mechanic tasks unbundle, or mechanic github init.
-  This skill is for safely operating the CLI workflow around Mechanic tasks. For writing or
-  debugging the Liquid task logic itself, use the mechanic-task-writer skill first, then return
-  to this skill to preview, diff, and publish.
+  This skill is for safely using the Mechanic CLI with task repos. For writing or debugging
+  the Liquid task logic itself, use the mechanic-task-writer skill first, then return to this
+  skill to preview, diff, and publish.
 ---
 
-# Mechanic Task Sync
+# Mechanic CLI
 
 You are operating a Mechanic CLI task repo. Your job is to keep local task files, helper
 directories, Git history, and the remote Mechanic shop in sync without surprising the user.
