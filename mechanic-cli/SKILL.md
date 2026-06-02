@@ -36,6 +36,16 @@ preview remote tasks, or publish. They create it in Mechanic Settings -> API
 tokens. Paste it during `mechanic init`, or run `mechanic auth login` after
 init. Never print the token, commit it, or store it in repo files.
 
+If the user wants to start from scratch instead of pulling an existing task:
+
+```bash
+mechanic tasks new <task-slug>
+mechanic tasks status <task-slug>
+```
+
+`mechanic tasks new` creates a local starter JSON file and matching helper directory only.
+It does not create anything in Mechanic until the task is published.
+
 If `mechanic.json` exists, start by understanding the repo state:
 
 ```bash
@@ -47,11 +57,11 @@ mechanic shop status
 After editing one task:
 
 ```bash
-mechanic tasks status <file>
+mechanic tasks status <task>
 mechanic tasks preview <task>
-mechanic tasks diff <file>
-mechanic tasks publish <file> --dry-run
-mechanic tasks publish <file>
+mechanic tasks diff <task>
+mechanic tasks publish <task> --dry-run
+mechanic tasks publish <task>
 ```
 
 Only run the final publish command when the user has explicitly asked to publish or has
@@ -68,13 +78,13 @@ mechanic tasks bundle tasks/example-task
 ```
 
 Most task commands accept a task selector. Prefer the shortest clear selector for conversation,
-but use the full file path when there is ambiguity. A selector can be a JSON file, a helper
-directory, a unique local slug, or a linked remote task ID:
+usually the unique local slug. Use the full file path only when there is ambiguity. A selector
+can be a unique local slug, a JSON file, a helper directory, or a linked remote task ID:
 
 ```bash
-mechanic tasks preview tasks/example-task.json
-mechanic tasks preview tasks/example-task
 mechanic tasks preview example-task
+mechanic tasks preview tasks/example-task
+mechanic tasks preview tasks/example-task.json
 mechanic tasks preview <remote-task-id>
 ```
 
@@ -94,26 +104,25 @@ directory, slug, or remote ID to the task in the Mechanic app.
 Preview is the confidence check before publish:
 
 ```bash
-mechanic tasks preview tasks/example-task.json
-mechanic tasks preview tasks/example-task
+mechanic tasks preview example-task
 ```
 
 Use `--verbose` when the user needs terminal-readable event, task run, and action run details:
 
 ```bash
-mechanic tasks preview tasks/example-task.json --verbose
+mechanic tasks preview example-task --verbose
 ```
 
 Use `--remote` to preview the task currently saved in Mechanic:
 
 ```bash
-mechanic tasks preview tasks/example-task.json --remote
+mechanic tasks preview example-task --remote
 ```
 
 Use `--json` when another agent, script, or CI job needs structured output:
 
 ```bash
-mechanic tasks preview tasks/example-task.json --json
+mechanic tasks preview example-task --json
 ```
 
 Preview reports sample event results, action failures, validation errors, and Shopify
@@ -136,13 +145,18 @@ Use `mechanic shop status --json` for agents, dashboards, or scripts.
 
 - Never run `mechanic tasks publish --all` unless the user explicitly asks to publish every task.
 - Prefer one-file commands while users are learning or testing.
+- Prefer task slugs in examples and user-facing instructions; use paths or remote IDs only when
+  needed to resolve ambiguity.
 - Remember that `mechanic tasks pull` without an argument pulls every remote task. Use
   `mechanic tasks pull <task>` when the user only wants one task.
 - Do not publish when `mechanic tasks status` says a helper needs bundling.
-- Do not ignore token/shop mismatch errors; they mean the API token belongs to another shop.
+- Do not ignore token/shop mismatch errors; they mean the API token is not valid for the
+  configured shop. Do not try to discover or print which other shop a token belongs to.
 - Treat `mechanic tasks diff` differences as information, not a failure. Use `--exit-code` only when CI or the user explicitly wants differences to fail.
 - New tasks created by publish are disabled; tell the user to review and enable them in Mechanic.
 - Publishing local task JSON does not enable or disable existing tasks.
+- Repo-wide `mechanic tasks status` checks remote state only for small projects. In large repos,
+  it skips remote checks by design; use `mechanic tasks status <task>` for one task.
 - Do not expose or log API tokens.
 - For custom API hosts, only use `MECHANIC_TRUST_API_BASE_URL=1` when the user is intentionally
   testing against a Mechanic API host they control. Do not set it globally in examples.
