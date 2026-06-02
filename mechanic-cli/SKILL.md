@@ -27,7 +27,6 @@ If `mechanic.json` is missing:
 
 ```bash
 mechanic init --shop <shop.myshopify.com>
-mechanic tasks pull
 mechanic tasks status
 ```
 
@@ -35,6 +34,17 @@ The user needs a Mechanic API token before authenticated commands can pull,
 preview remote tasks, or publish. They create it in Mechanic Settings -> API
 tokens. Paste it during `mechanic init`, or run `mechanic auth login` after
 init. Never print the token, commit it, or store it in repo files.
+
+Ask whether the user wants to bring existing Mechanic tasks into the repo or start from a
+new local task. If they want existing tasks and they are comfortable pulling every task for
+the shop, run:
+
+```bash
+mechanic tasks pull
+```
+
+If they only want one existing task in a fresh repo, run `mechanic tasks list --verbose` and
+use the remote task ID with `mechanic tasks pull <remote-task-id>`.
 
 If the user wants to start from scratch instead of pulling an existing task:
 
@@ -147,15 +157,20 @@ Use `mechanic shop status --json` for agents, dashboards, or scripts.
 - Prefer one-file commands while users are learning or testing.
 - Prefer task slugs in examples and user-facing instructions; use paths or remote IDs only when
   needed to resolve ambiguity.
-- Remember that `mechanic tasks pull` without an argument pulls every remote task. Use
-  `mechanic tasks pull <task>` when the user only wants one task.
+- Remember that `mechanic tasks pull` without an argument pulls every remote task. In a fresh
+  repo, use `mechanic tasks list --verbose` and then `mechanic tasks pull <remote-task-id>`
+  when the user only wants one existing task. In an already linked repo, a local task slug is
+  usually fine.
 - Do not publish when `mechanic tasks status` says a helper needs bundling.
 - Do not ignore token/shop mismatch errors; they mean the API token is not valid for the
   configured shop. Do not try to discover or print which other shop a token belongs to.
 - Treat `mechanic tasks diff` differences as information, not a failure. Use `--exit-code` only when CI or the user explicitly wants differences to fail.
 - When `mechanic tasks diff` says Mechanic changed since the file was last synced, read whether
   the local file also has unsynced changes. If only Mechanic changed, pull the task normally.
-  If both sides changed, ask the user which side should win before using `--force`.
+  If both sides changed, help the user reconcile or merge the changes first. Use `--force`
+  only after the user confirms the direction: `mechanic tasks pull <remote-task-id> --force`
+  keeps the current Mechanic version, and `mechanic tasks publish <task> --force` keeps the
+  local file. Run a publish dry-run before force-publishing when possible.
 - New tasks created by publish are disabled; tell the user to review and enable them in Mechanic.
 - Publishing local task JSON does not enable or disable existing tasks.
 - Repo-wide `mechanic tasks status` checks remote state only for small projects. In large repos,
@@ -176,7 +191,9 @@ mechanic github init
 ```
 
 The generated workflows are for one shop. Users configure `MECHANIC_API_TOKEN` as a GitHub
-secret. Keep the mental model simple:
+secret. Prefer an interactive secret prompt such as `gh secret set MECHANIC_API_TOKEN`; do
+not put token values directly in shell commands, scripts, commits, logs, or chat. Keep the
+mental model simple:
 
 - PR validation checks task files.
 - Manual deploy always dry-runs first, then publishes only when `mode=deploy`.
