@@ -153,6 +153,9 @@ Use `mechanic shop status --json` for agents, dashboards, or scripts.
 - Do not ignore token/shop mismatch errors; they mean the API token is not valid for the
   configured shop. Do not try to discover or print which other shop a token belongs to.
 - Treat `mechanic tasks diff` differences as information, not a failure. Use `--exit-code` only when CI or the user explicitly wants differences to fail.
+- When `mechanic tasks diff` says Mechanic changed since the file was last synced, read whether
+  the local file also has unsynced changes. If only Mechanic changed, pull the task normally.
+  If both sides changed, ask the user which side should win before using `--force`.
 - New tasks created by publish are disabled; tell the user to review and enable them in Mechanic.
 - Publishing local task JSON does not enable or disable existing tasks.
 - Repo-wide `mechanic tasks status` checks remote state only for small projects. In large repos,
