@@ -9,6 +9,7 @@ These skills work with any coding agent that supports the [Agent Skills](https:/
 | Skill | Description |
 |-------|-------------|
 | [mechanic-task-writer](./mechanic-task-writer/) | Write, edit, debug, and optimize Mechanic tasks with production-ready patterns, GraphQL queries, and bulk operations |
+| [mechanic-cli](./mechanic-cli/) | Use the Mechanic CLI to create, pull, preview, diff, check status, and publish task repos safely |
 
 ## Installation
 
@@ -22,6 +23,10 @@ Install a specific skill:
 
 ```bash
 npx skills add lightward/mechanic-skills --skill mechanic-task-writer
+```
+
+```bash
+npx skills add lightward/mechanic-skills --skill mechanic-cli
 ```
 
 Or manually copy the skill folder to your agent's skills directory:
