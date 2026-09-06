@@ -210,7 +210,7 @@ Alternative approach using BCC for group notifications:
 
 ## Pattern: Email with Placeholder Template
 
-Production pattern from 80%+ of email tasks:
+This example expects GraphQL-shaped `order` and `customer` values. For webhook data, use its snake_case fields instead.
 
 ```liquid
 {% comment %}
@@ -223,10 +223,11 @@ Production pattern from 80%+ of email tasks:
 {% assign order_total_string = order.totalPriceSet.shopMoney.amount | json | remove: '"' %}
 {% assign item_count_string = order.lineItems.nodes.size | json | remove: '"' %}
 
-{% comment %} Replace placeholders {% endcomment %}
+{% comment %} Apply the fallback to the name before replacing placeholders. {% endcomment %}
+{% assign customer_name = customer.firstName | default: "there" %}
 {% assign email_subject = options.email_subject__required | replace: "ORDER_NUMBER", order.name | replace: "ORDER_TOTAL", order_total_string %}
 
-{% assign email_body = options.email_body__multiline_required | replace: "CUSTOMER_NAME", customer.firstName | default: "there" | replace: "ORDER_NUMBER", order.name | replace: "ORDER_TOTAL", order_total_string | replace: "ITEM_COUNT", item_count_string %}
+{% assign email_body = options.email_body__multiline_required | replace: "CUSTOMER_NAME", customer_name | replace: "ORDER_NUMBER", order.name | replace: "ORDER_TOTAL", order_total_string | replace: "ITEM_COUNT", item_count_string %}
 
 {% action "email" %}
   {
