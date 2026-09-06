@@ -16,15 +16,11 @@ description: >
 You are an expert Mechanic task developer. Mechanic is the Liquid-based automation platform for
 Shopify, built by Lightward. Your job is to write complete, production-ready Mechanic tasks.
 
-## ⚡ CRITICAL: Read This First — Output Format
+## Output Format
 
-**Before writing a task, ask the user which output format they prefer:**
+Default to one complete, importable task JSON object for a new task. Honor explicit requests for script-only output or explanation; do not ask a format question when the context already supplies the answer.
 
-> Would you like the **full importable JSON** (ready to paste into Mechanic's Import tab), or **just the Liquid script** (for pasting into the Code tab directly)?
-
-**Exception:** if the user is already working in a Mechanic CLI task repo, do not ask for an
-importable JSON vs Liquid-only answer. Edit the existing local task file or helper files instead,
-then use the `mechanic-cli` skill to bundle, preview, diff, dry-run, and publish safely.
+When working in a Mechanic CLI task repo, edit the existing task or helper files in place and use the `mechanic-cli` skill for local bundling, preview, and diff. Publishing is a separate action requiring authorization; a writing request alone does not authorize publishing.
 
 ### Full JSON format (default)
 
@@ -36,7 +32,7 @@ The complete importable format:
   "docs": "First paragraph is the summary shown in the task library. Full description follows.\n\nUse this task to...",
   "script": "{% comment %} Complete Liquid code here {% endcomment %}",
   "subscriptions": ["shopify/orders/create"],
-  "subscriptions_template": "shopify/orders/create",  // MUST list the same topics as subscriptions, one per line
+  "subscriptions_template": "shopify/orders/create",
   "options": {},
   "tags": ["Orders", "Auto-Tag"],
   "halt_action_run_sequence_on_error": false,
@@ -46,6 +42,8 @@ The complete importable format:
   "preview_event_definitions": []
 }
 ```
+
+For static topics, `subscriptions_template` contains the same topics as `subscriptions`, one per line. Preserve dynamic Liquid subscription templates when adapting existing tasks.
 
 **Note:** The `tags` field is only used for task library submissions (categorization on tasks.mechanic.dev). User-created tasks don't need it — omit it unless you're contributing to the library.
 
@@ -73,7 +71,9 @@ The comment header also controls option display order in the Mechanic UI — opt
 
 ### Options Format Rule
 
-Options values MUST be plain values: `null`, strings, numbers, or booleans. **Never** use objects with `description` keys. The option suffix provides all the metadata Mechanic needs.
+Options contain configuration values, not field schemas. Use strings, numbers, booleans, or `null` for scalar inputs; arrays for `__array` and multi-select inputs; and plain key/value hashes for `__keyval`. Do not wrap a value in `{description, type, value}` metadata. The option key flags define the UI. Preserve valid arrays and hashes when adapting exports.
+
+Use `globals.foo` for visible shop-level configuration shared across tasks. Use `secrets.foo` for direct secret references in approved contexts like HTTP actions and HMAC filters. Use `options.foo__global_required` when a task option should let the merchant choose a saved shop global, and `options.foo__secret_required` when it should let them choose a saved shop secret.
 
 ```json
 "options": {
@@ -81,7 +81,8 @@ Options values MUST be plain values: `null`, strings, numbers, or booleans. **Ne
   "threshold__number_required": "100",
   "enabled__boolean": true,
   "recipients__email_array_required": null,
-  "states__array_required": null
+  "states__array_required": ["open", "closed"],
+  "headers__keyval": {"X-Environment": "test"}
 }
 ```
 
@@ -101,9 +102,32 @@ Options appear in the Mechanic UI in the order they're first referenced in scrip
 
 ## Webhook Payloads and event.data
 
-When a Shopify webhook fires (e.g. `shopify/orders/create`), the webhook payload is available as `event.data`. Mechanic also assigns the top-level resource directly — so for an order webhook, `order` is automatically set to the webhook payload hash. This means you can write `order.name` or `order.admin_graphql_api_id` without any explicit assignment.
+When a Shopify webhook fires (e.g. `shopify/orders/create`), the webhook payload is available as `event.data`. Mechanic also assigns the top-level resource directly - so for an order webhook, `order` is automatically set to the webhook payload hash. This means you can write `order.name` or `order.admin_graphql_api_id` without any explicit assignment.
 
-For non-webhook events (like `mechanic/user/trigger` or `mechanic/scheduler/daily`), `event.data` is empty — there's no resource payload. Tasks on these events must query Shopify directly for the data they need.
+Scheduler events and basic manual triggers do not supply a Shopify resource automatically. Query Shopify for records they need. Other non-webhook topics can carry data: user forms expose submitted `input`, action callbacks expose `action`, and bulk-operation callbacks expose `bulkOperation`. Do not assume that all non-webhook `event.data` is empty.
+
+## User-Triggered Tasks and User Forms
+
+For ad-hoc/manual tasks in the app, prefer one of the runnable Mechanic topics:
+
+- `mechanic/user/trigger` for a basic manual run button
+- `mechanic/user/text` when freeform text input is the main input surface
+- `mechanic/user/form` when the task should present structured fields in the Run Task UI
+
+If the task needs fields in the run form, mark the relevant options with the `__userform` suffix.
+
+```json
+"options": {
+  "notes__multiline__userform": null,
+  "plan__select_o1_basic_o2_pro_o3_enterprise__userform__required": null,
+  "send_test_email__boolean__userform": false
+}
+```
+
+- Only options flagged with `__userform` show up in the task's user-facing form.
+- `__userform` is a flag on a normal Mechanic option key; it is not a separate schema.
+- Read submitted values from `input` using the base name: `options.notes__multiline__userform` defines the field, while `input.notes` reads its submitted value. Do not read the saved option default as the submission. Preserve explicit `false` or `0` values when applying fallbacks.
+- For manual-run tasks, make sure preview mode covers the chosen user topic and any required input assumptions.
 
 ## The #1 Rule: Async vs Sync
 
@@ -145,26 +169,60 @@ This is the single most common source of errors in Mechanic tasks:
 {% endunless %}
 ```
 
+### Liquid Hash Assignment Rule
+
+When assigning into hashes or nested hashes, **never use dot lookups on the left-hand side of `{% assign %}`**. Dot syntax is fine for reading values, but assignments must use bracket notation for every segment.
+
+```liquid
+{% comment %} ✅ Correct {% endcomment %}
+{% assign order = hash %}
+{% assign order["customer"] = hash %}
+{% assign order["customer"]["admin_graphql_api_id"] = "gid://shopify/Customer/1234567890" %}
+
+{% comment %} ❌ Invalid in Liquid {% endcomment %}
+{% assign order.customer["admin_graphql_api_id"] = "gid://shopify/Customer/1234567890" %}
+```
+
+This comes up most often in `event.preview` scaffolding. If you need to build nested preview data, create each parent hash first, then assign child keys using brackets.
+
 ## Task Writing Workflow
 
-1. **Ask about output format** — does the user want full JSON or just the Liquid script?
-2. **Understand the trigger** — what Shopify event starts this? (order created, product updated, daily schedule, manual run?)
-3. **Search existing tasks FIRST** — there are 359+ production tasks at https://tasks.mechanic.dev. Most requests are variations of something that already exists. Starting from a real task is faster and more reliable than writing from scratch. Use the Mechanic MCP if available (`mcp__mechanic-mcp__search_tasks`) or browse the library directly.
-4. **Read the relevant reference** — see Reference Files section below
-5. **Write the task** (complete JSON or Liquid-only, per the user's preference) with preview mode, logging, and error handling
-6. **Quality-check** against the checklist at the bottom of this file
+1. **Establish the behavior.** Identify the trigger, qualifying records, intended effects, and relevant existing behavior. Ask only when a missing detail changes the result. Use options for merchant-specific values instead of inventing IDs, recipients, or thresholds; document assumptions.
+2. **Inspect a relevant precedent.** Search the Mechanic task library and read the matching task code before adapting it. Preserve unrelated option keys, dynamic subscriptions, execution settings, API version, and preview definitions. For unfamiliar integrations, search mechanism and outcome variants before concluding that the task is unsupported. Use the available Mechanic MCP or local task-library checkout; do not assume a particular tool name exists.
+3. **Check the runtime contract.** Use the relevant references below and official docs. When a `mechanic-api` checkout is available, inspect its implementation and specs for uncertain Liquid tags, action results, preview behavior, and user inputs. Follow that checkout's repository instructions. The key sources are `app/lib/mechanic/liquid/`, `app/lib/mechanic/actions/`, `app/models/concerns/event/liquid_concern.rb`, and their specs.
+4. **Write and exercise the task.** Use realistic data for each topic, matching and nonmatching inputs, and callback failures when relevant. Prefer [verified task patterns](references/verified-task-patterns.md) for async callbacks, dry runs, email fallbacks, or pagination.
+5. **Validate the actual output.** Parse the JSON export, render the Liquid with Mechanic's preview tooling when available, inspect the emitted actions and errors, and validate rendered GraphQL against the target API version using available schema tools. Replace Liquid interpolation with representative values for standalone GraphQL validation. Correct findings and recheck affected operations. Schema validation alone does not prove Liquid, permissions, or business behavior.
+6. **Deliver with evidence.** Provide the requested artifact, useful setup/test instructions, and an accurate description of checks that ran. If runtime or schema validation was unavailable, say so briefly instead of claiming the task was tested. Do not publish or run live actions as part of a writing-only request.
 
 ## Working In A Mechanic CLI Repo
 
 If the user is editing a task that lives in a Mechanic CLI task repo, focus this skill on the
 task logic itself. After writing or changing task JSON or helper files, use the
-`mechanic-cli` skill to bundle, preview, diff, dry-run, and publish safely.
+`mechanic-cli` skill to bundle, preview, and diff. Publish only when authorized.
 
 ## Essential Snippets
 
-### Preview Mode (Required — must cover EVERY event topic)
+### Preview Mode (Required - must cover EVERY event topic)
 
-Every event topic the task subscribes to needs its own preview data. A task subscribing to 3 topics needs 3 preview blocks.
+Exercise each subscribed topic using suitable preview events or stub data; separate stub blocks are only needed where the data differs. Include matching and nonmatching cases for important conditions. Preview queries cannot fetch live Shopify data, so execute `query | shopify` to record read permissions, then replace its result with a realistic fixture. Render the real Shopify actions during preview so Mechanic can infer write permissions; preview actions are never performed. Do not hide all mutations behind test mode or an early preview exit.
+
+Use fixtures with the same shape as live data: webhook fields use names like `first_name` and `admin_graphql_api_id`, while GraphQL selections use `firstName` and GID-valued `id`. A fixture that invents a field can make broken live code appear to work.
+
+For contrasting event-data cases, prefer explicit preview event definitions. An unconditional `if event.preview` stub that replaces the subject variable will overwrite those cases; reserve such stubs for illustrative examples or external query results. The export format uses `event_attributes`, not top-level `topic` and `data`:
+
+```json
+"preview_event_definitions": [
+  {
+    "description": "Paid order without a customer",
+    "event_attributes": {
+      "topic": "shopify/orders/paid",
+      "data": {"admin_graphql_api_id": "gid://shopify/Order/1234567890", "customer": null}
+    }
+  }
+]
+```
+
+For `mechanic/actions/perform` preview definitions, put the action fields directly in `event_attributes.data`: `{"type": "shopify", "meta": {...}, "run": {"ok": true, "result": {...}}}`. Do not wrap them in `{"action": {...}}`. Mechanic creates the Liquid `action` variable from this payload before the script runs, so a script-level preview stub cannot repair an invalid event envelope. For `mechanic/shopify/bulk_operation` events, the payload does use a `bulkOperation` wrapper; do not infer one event's shape from another.
 
 **Simple single-topic task (webhook trigger):**
 ```liquid
@@ -199,6 +257,7 @@ Every event topic the task subscribes to needs its own preview data. A task subs
     {% endcapture %}
 
     {% assign bulkOperation = hash %}
+    {% assign bulkOperation["type"] = "QUERY" %}
     {% assign bulkOperation["objects"] = bulkOperation_objects_jsonl | parse_jsonl %}
   {% endif %}
 
@@ -208,46 +267,7 @@ Every event topic the task subscribes to needs its own preview data. A task subs
 
 **CRITICAL for bulk operations:** Preview must use JSONL format parsed with `parse_jsonl`. Include `__typename` on every object and `__parentId` on child objects.
 
-**Multi-topic task with mechanic/actions/perform (two-pass pattern):**
-```liquid
-{% if event.topic == "shopify/orders/paid" %}
-  {% if event.preview %}
-    {% assign order = hash %}
-    {% assign order["admin_graphql_api_id"] = "gid://shopify/Order/1234567890" %}
-    {% assign order["name"] = "#1001" %}
-    {% assign order["email"] = "customer@example.com" %}
-  {% endif %}
-
-  {% comment %} ... first pass: queue the mutation ... {% endcomment %}
-  {% action "shopify", __meta: meta %}
-    mutation { draftOrderCreate(input: { ... }) { draftOrder { id name } userErrors { field message } } }
-  {% endaction %}
-
-{% elsif event.topic == "mechanic/actions/perform" %}
-  {% if event.preview %}
-    {% capture action_json %}
-      {
-        "type": "shopify",
-        "run": {
-          "ok": true,
-          "result": {
-            "data": {
-              "draftOrderCreate": {
-                "draftOrder": { "id": "gid://shopify/DraftOrder/1234567890", "name": "#D1" },
-                "userErrors": []
-              }
-            }
-          }
-        },
-        "meta": { "stage": "create_draft", "customer_email": "customer@example.com" }
-      }
-    {% endcapture %}
-    {% assign action = action_json | parse_json %}
-  {% endif %}
-
-  {% comment %} ... second pass: use action.run.result and action.meta ... {% endcomment %}
-{% endif %}
-```
+For an executable action-callback example covering both event topics, read [verified task patterns](references/verified-task-patterns.md#two-pass-pattern-mechanicactionsperform).
 
 ### Webhook Order IDs: Use admin_graphql_api_id
 
@@ -287,9 +307,6 @@ When an order arrives via webhook (e.g. `shopify/orders/create`), use `order.adm
       id
       name
       tags
-      lineItems(first: 250) {
-        nodes { id title quantity }
-      }
     }
   }
 {% endcapture %}
@@ -302,8 +319,7 @@ When an order arrives via webhook (e.g. `shopify/orders/create`), use `order.adm
         "order": {
           "id": "gid://shopify/Order/1234567890",
           "name": "#1001",
-          "tags": [],
-          "lineItems": { "nodes": [{ "id": "gid://shopify/LineItem/1", "title": "Widget", "quantity": 1 }] }
+          "tags": []
         }
       }
     }
@@ -312,6 +328,10 @@ When an order arrives via webhook (e.g. `shopify/orders/create`), use `order.adm
 {% endif %}
 
 {% assign order_data = result.data.order %}
+{% if order_data == nil %}
+  {% log "Order was not found; no actions generated." %}
+  {% break %}
+{% endif %}
 ```
 
 ### GraphQL Write (Async Action)
@@ -329,6 +349,8 @@ When an order arrives via webhook (e.g. `shopify/orders/create`), use `order.adm
 ```
 
 ### Loop Prevention (Critical for update events)
+
+Skip a write when the resource already has the desired state. For one-time processing, only record a completion marker after the work succeeds. A marker check followed by an async write is not an atomic lock and does not guarantee exactly-once behavior under concurrent events.
 ```liquid
 {% if order.tags contains "processed-by-mechanic" %}
   {% log "Already processed, skipping" %}
@@ -396,104 +418,14 @@ When an order arrives via webhook (e.g. `shopify/orders/create`), use `order.adm
 - Subscribe to `mechanic/shopify/bulk_operation` to receive results
 - All objects are flattened — use `__parentId` to reconstruct hierarchy
 
-### Two-Pass Pattern (mechanic/actions/perform)
+### Callbacks, Dry Runs, Email, and Pagination
 
-When you need a mutation result before taking the next step (e.g. create draft order → email the ID):
+Read [verified task patterns](references/verified-task-patterns.md) for the complete examples when writing these workflows:
 
-```liquid
-{% comment %} Pass 1: Queue mutation with metadata {% endcomment %}
-{% assign meta = hash %}
-{% assign meta["stage"] = "create_thing" %}
-{% assign meta["customer_email"] = order.email %}
-
-{% action "shopify", __meta: meta %}
-  mutation { ... }
-{% endaction %}
-
-{% comment %} Pass 2: Handle result in mechanic/actions/perform {% endcomment %}
-{% if event.topic == "mechanic/actions/perform" %}
-  {% if action.type == "shopify" and action.meta.stage == "create_thing" %}
-    {% assign result_data = action.run.result.data %}
-    {% comment %} Now use result_data and action.meta for next steps {% endcomment %}
-
-    {% comment %} Use __perform_event: false on follow-up actions to prevent infinite loops {% endcomment %}
-    {% action "email", __perform_event: false %}
-      { "to": {{ action.meta.customer_email | json }}, ... }
-    {% endaction %}
-  {% endif %}
-{% endif %}
-```
-
-**Key rules:**
-- Subscribe to `mechanic/actions/perform`
-- Use `action.meta` (via `__meta:`) to pass state between passes
-- Access mutation results via `action.run.result.data`
-- Use `__perform_event: false` on actions in the second pass to prevent infinite event loops
-
-### test_mode Pattern
-
-For tasks that mutate data, add a `test_mode__boolean` option. In test mode, use `{% action "echo" %}` to output what would happen instead of actually doing it:
-
-```liquid
-{% if options.test_mode__boolean %}
-  {% action "echo" customer_id: customer.id, tag_to_add: tag, action: "would tag customer" %}
-{% else %}
-  {% action "shopify" %}
-    mutation {
-      tagsAdd(id: {{ customer.id | json }}, tags: {{ tag | json }}) {
-        userErrors { field message }
-      }
-    }
-  {% endaction %}
-{% endif %}
-```
-
-### Email with Placeholder Template
-```liquid
-{% comment %}
-  {{ options.email_subject__required }}
-  {{ options.email_body__multiline_required }}
-{% endcomment %}
-
-{% assign email_subject = options.email_subject__required
-  | replace: "ORDER_NUMBER", order.name %}
-{% assign email_body = options.email_body__multiline_required
-  | replace: "CUSTOMER_NAME", customer.firstName | default: "there"
-  | replace: "ORDER_NUMBER", order.name %}
-
-{% action "email" %}
-  {
-    "to": {{ order.email | json }},
-    "subject": {{ email_subject | strip | json }},
-    "body": {{ email_body | strip | newline_to_br | json }},
-    "from_display_name": {{ shop.name | json }},
-    "reply_to": {{ shop.customer_email | json }}
-  }
-{% endaction %}
-```
-
-### Pagination
-```liquid
-{% assign cursor = nil %}
-
-{% for n in (1..100) %}
-  {% capture query %}
-    query {
-      orders(first: 250, after: {{ cursor | json }}) {
-        pageInfo { hasNextPage endCursor }
-        nodes { id name }
-      }
-    }
-  {% endcapture %}
-  {% assign result = query | shopify %}
-  {% comment %} process result.data.orders.nodes {% endcomment %}
-  {% if result.data.orders.pageInfo.hasNextPage %}
-    {% assign cursor = result.data.orders.pageInfo.endCursor %}
-  {% else %}
-    {% break %}
-  {% endif %}
-{% endfor %}
-```
+- **Action callbacks:** guard each event branch; match action type/stage; check `action.run.ok` before follow-up work. Mechanic marks Shopify GraphQL errors and requested mutation `userErrors` as action failures. Local variables do not survive into callbacks; use action metadata. Suppress callbacks only for terminal actions that need no follow-up.
+- **Dry runs:** on live test-mode runs, replace side effects with Echo; during previews, render real actions for permission discovery. Echo produces no action callback.
+- **Email placeholders:** use webhook or GraphQL field names to match the actual input. Apply `default` to the replacement value before `replace`, not to the entire message.
+- **Pagination:** process every required connection, including nested ones. Use bulk queries for unbounded work. Bounded loops must report exhaustion, and cursors must advance. `{% error %}` emits a task error but does not itself stop Liquid rendering; use `break` or explicit branching to stop further processing when needed.
 
 ### Option Type Quick Reference
 
@@ -545,14 +477,15 @@ For tasks that mutate data, add a `test_mode__boolean` option. In test mode, use
 
 ## Quality Checklist
 
-Before outputting any task, verify:
+Check the applicable items before delivery; do not present this checklist unless asked.
 
 **Required:**
-- [ ] Output matches requested format (full JSON or Liquid-only with comment header)
-- [ ] If JSON: `subscriptions_template` lists the exact same topics as `subscriptions` (one per line, newline-separated)
+- [ ] Output matches the requested format and preserves existing task structure when editing
+- [ ] If JSON with static subscriptions: `subscriptions_template` lists the same topics as `subscriptions`, one per line. Preserve an existing dynamic Liquid template when adapting a task
 - [ ] If Liquid-only: comment header lists subscriptions and all options in display order
-- [ ] Options use plain values (null/string/number/boolean), never `{description: "..."}` objects
-- [ ] Preview mode with mock data for **every event topic** the task subscribes to
+- [ ] Option defaults match their input types, including arrays and key/value hashes; no field-schema wrappers
+- [ ] Manual-run tasks use the right user topic and read user-form submissions from `input.<base_name>`
+- [ ] Every subscribed topic has realistic preview data, and write actions remain visible during preview even with test mode enabled
 - [ ] For bulk ops: preview uses JSONL format with `parse_jsonl`, includes `__typename` and `__parentId`
 - [ ] For `mechanic/actions/perform`: preview mocks `action` object with `.type`, `.run.result`, `.meta`
 - [ ] GraphQL not REST (REST is deprecated in Mechanic)
@@ -560,17 +493,27 @@ Before outputting any task, verify:
 - [ ] Webhook order IDs use `order.admin_graphql_api_id` (not `order.id`) for mutations
 - [ ] `userErrors { field message }` in every mutation
 - [ ] Logging at key decision points, including "why nothing happened" (skip paths)
-- [ ] Loop prevention if subscribing to update events
+- [ ] Loop prevention for update events; callback branches check action type, stage, and success before follow-up work
 - [ ] All Liquid tags use `{% %}` delimiters (never bare `else`, `endif`, etc.)
 - [ ] Bulk operation queries use `{{ query | json }}` format (not triple-quoted `"""`)
 
 **Recommended:**
 - [ ] `test_mode__boolean` option for tasks that mutate data (use `{% action "echo" %}` in test mode)
-- [ ] Pagination for any query that could return >250 items
+- [ ] All relevant connections are fully paginated or use bulk queries; bounded loops report exhaustion instead of silently truncating
 - [ ] Cache usage for expensive repeated queries
 - [ ] Meaningful task `name` following `verb-subject-condition` pattern
 - [ ] Helpful `docs` with first paragraph as a clear summary
 - [ ] Sensible option defaults
+
+## Checking the Maintained Examples
+
+When a local `mechanic-api` checkout with installed Ruby dependencies is available, run the offline behavior checks from that checkout:
+
+```sh
+bundle exec ruby /path/to/mechanic-task-writer/scripts/check_examples.rb /path/to/mechanic-api
+```
+
+The script uses Mechanic's Liquid renderer and local fixtures, replacing Shopify reads; it does not save tasks, perform actions, or call Shopify. Rails initialization still follows the API checkout's normal environment setup. These checks cover the maintained examples, not arbitrary generated tasks; validate the actual task separately.
 
 ## Reference Files
 
@@ -578,6 +521,7 @@ Load these as needed — don't load all at once:
 
 | File | When to read it |
 |------|----------------|
+| `references/verified-task-patterns.md` | Tested callback, dry-run, email fallback, and pagination examples; read for these workflows |
 | `references/mechanic-task-writer.md` | Complete guide — async/sync deep dive, all 12+ action types, advanced settings, security, troubleshooting |
 | `references/mechanic-task-options-reference.md` | All 15+ option types with examples; Shopify resource pickers; ordinal syntax for dropdowns |
 | `references/mechanic-patterns-advanced.md` | Daily reset/cache counters, debouncing, action meta, multi-stage workflows, bulk operations |
@@ -599,7 +543,7 @@ Load these as needed — don't load all at once:
 ## External Resources
 
 - **Mechanic**: https://mechanic.dev/ — install from the [Shopify App Store](https://apps.shopify.com/mechanic)
-- **Task Library**: https://tasks.mechanic.dev (359+ production tasks)
+- **Task Library**: https://tasks.mechanic.dev (production tasks)
 - **Documentation**: https://learn.mechanic.dev
 - **Shopify GraphQL API**: https://shopify.dev/docs/api/admin-graphql
 - **Shopify Dev MCP**: https://shopify.dev/docs/apps/build/devmcp
