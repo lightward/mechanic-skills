@@ -1,0 +1,1416 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "format": {
+      "type": "string",
+      "const": "mechanic/function"
+    },
+    "version": {
+      "type": "number",
+      "const": 1
+    },
+    "definition": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "number",
+          "const": 1
+        },
+        "sampleCatalog": {
+          "type": "string",
+          "enum": [
+            "apparel",
+            "example"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "starterId": {
+          "type": "string"
+        },
+        "promotion": {
+          "type": "object",
+          "properties": {
+            "method": {
+              "$ref": "#/definitions/__schema0"
+            },
+            "retailEligibility": {
+              "$ref": "#/definitions/__schema1"
+            },
+            "code": {
+              "$ref": "#/definitions/__schema3"
+            },
+            "startsAt": {
+              "$ref": "#/definitions/__schema5"
+            },
+            "endsAt": {
+              "$ref": "#/definitions/__schema5"
+            },
+            "combinesWith": {
+              "$ref": "#/definitions/__schema6"
+            }
+          },
+          "required": [
+            "method"
+          ],
+          "additionalProperties": false
+        },
+        "bindingDisplayNames": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "testCarts": {
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/__schema7"
+          }
+        },
+        "collection": {
+          "$ref": "#/definitions/__schema4"
+        },
+        "excludeSubscriptions": {
+          "$ref": "#/definitions/__schema18"
+        },
+        "match": {
+          "$ref": "#/definitions/__schema19"
+        },
+        "conditions": {
+          "$ref": "#/definitions/__schema20"
+        },
+        "action": {
+          "$ref": "#/definitions/__schema28"
+        },
+        "target": {
+          "$ref": "#/definitions/__schema45"
+        },
+        "alternatives": {
+          "maxItems": 11,
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/__schema46"
+          }
+        }
+      },
+      "required": [
+        "version",
+        "name",
+        "collection",
+        "excludeSubscriptions",
+        "match",
+        "conditions",
+        "action"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "format",
+    "version",
+    "definition"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "__schema0": {
+      "type": "string",
+      "enum": [
+        "automatic",
+        "code"
+      ]
+    },
+    "__schema1": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "const": "pos"
+            }
+          },
+          "required": [
+            "mode"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "const": "outsidePos"
+            }
+          },
+          "required": [
+            "mode"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "const": "locations"
+            },
+            "names": {
+              "minItems": 1,
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/__schema2"
+              }
+            }
+          },
+          "required": [
+            "mode",
+            "names"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "__schema2": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "__schema3": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/__schema4"
+        }
+      ]
+    },
+    "__schema4": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "__schema5": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "__schema6": {
+      "type": "object",
+      "properties": {
+        "productDiscounts": {
+          "type": "boolean"
+        },
+        "orderDiscounts": {
+          "type": "boolean"
+        },
+        "shippingDiscounts": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "productDiscounts",
+        "orderDiscounts",
+        "shippingDiscounts"
+      ],
+      "additionalProperties": false
+    },
+    "__schema7": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/__schema4"
+        },
+        "expected": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "family": {
+                  "type": "string",
+                  "const": "discount"
+                },
+                "cents": {
+                  "$ref": "#/definitions/__schema8"
+                },
+                "shippingSavings": {
+                  "maxItems": 10,
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/__schema8"
+                  }
+                }
+              },
+              "required": [
+                "family",
+                "cents"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "family": {
+                  "type": "string",
+                  "const": "validation"
+                },
+                "message": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/__schema4"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "family",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "family": {
+                  "type": "string",
+                  "const": "transform"
+                },
+                "mode": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "merge",
+                        "expand"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "components": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "variant": {
+                        "$ref": "#/definitions/__schema4"
+                      },
+                      "quantity": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "variant",
+                      "quantity"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "family",
+                "mode",
+                "components"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "family": {
+                  "type": "string",
+                  "const": "delivery"
+                },
+                "options": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "extraGroups": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "required": [
+                "family",
+                "options"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "family": {
+                  "type": "string",
+                  "const": "payment"
+                },
+                "options": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "family",
+                "options"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "cart": {
+          "type": "object",
+          "properties": {
+            "retailLocation": {
+              "type": "string",
+              "maxLength": 255
+            },
+            "currency": {
+              "type": "string",
+              "pattern": "^[A-Z]{3}$"
+            },
+            "checkedCollections": {
+              "maxItems": 100,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/__schema9"
+              }
+            },
+            "checkedMetafield": {
+              "type": "object",
+              "properties": {
+                "namespace": {
+                  "$ref": "#/definitions/__schema4"
+                },
+                "key": {
+                  "$ref": "#/definitions/__schema4"
+                }
+              },
+              "required": [
+                "namespace",
+                "key"
+              ],
+              "additionalProperties": false
+            },
+            "catalogAccess": {
+              "type": "boolean"
+            },
+            "catalogIssue": {
+              "type": "string",
+              "enum": [
+                "reconnect",
+                "unavailable"
+              ]
+            },
+            "quantities": {
+              "minItems": 5,
+              "maxItems": 25,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/__schema10"
+              }
+            },
+            "extraItems": {
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/__schema11"
+              }
+            },
+            "customerOrderCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            "shippingCountries": {
+              "maxItems": 10,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/__schema13"
+              }
+            },
+            "cartAttributes": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/__schema15"
+                }
+              ]
+            },
+            "lineAttributes": {
+              "maxItems": 25,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/__schema15"
+              }
+            },
+            "exampleOptionNames": {
+              "type": "boolean"
+            },
+            "extraDeliveryGroups": {
+              "maxItems": 9,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/__schema16"
+              }
+            },
+            "discountCode": {
+              "type": "string",
+              "maxLength": 255
+            },
+            "testAt": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+            },
+            "shippingCents": {
+              "maxItems": 10,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/__schema17"
+              }
+            },
+            "member": {
+              "type": "boolean"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 255
+              }
+            },
+            "options": {
+              "type": "object",
+              "properties": {
+                "delivery": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/__schema4"
+                  }
+                },
+                "payment": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/__schema4"
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "quantities",
+            "member"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "name",
+        "cart"
+      ],
+      "additionalProperties": false
+    },
+    "__schema8": {
+      "type": "number",
+      "minimum": 0,
+      "multipleOf": 0.1
+    },
+    "__schema9": {
+      "type": "object",
+      "properties": {
+        "collection": {
+          "$ref": "#/definitions/__schema4"
+        }
+      },
+      "required": [
+        "collection"
+      ],
+      "additionalProperties": false
+    },
+    "__schema10": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 999
+    },
+    "__schema11": {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "$ref": "#/definitions/__schema4"
+        },
+        "displayName": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/__schema4"
+            }
+          ]
+        },
+        "tagsUnavailable": {
+          "type": "boolean"
+        },
+        "collection": {
+          "$ref": "#/definitions/__schema4"
+        },
+        "memberships": {
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/__schema12"
+          }
+        },
+        "cents": {
+          "$ref": "#/definitions/__schema8"
+        },
+        "compareAtCents": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/__schema8"
+            }
+          ]
+        },
+        "compareAtChecked": {
+          "type": "boolean"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/__schema4"
+          }
+        },
+        "metafields": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/__schema4"
+          }
+        },
+        "subscription": {
+          "type": "boolean"
+        },
+        "preorder": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "variant",
+        "collection",
+        "cents",
+        "tags",
+        "metafields",
+        "subscription",
+        "preorder"
+      ],
+      "additionalProperties": false
+    },
+    "__schema12": {
+      "type": "object",
+      "properties": {
+        "collection": {
+          "$ref": "#/definitions/__schema4"
+        }
+      },
+      "required": [
+        "collection"
+      ],
+      "additionalProperties": false
+    },
+    "__schema13": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/__schema14"
+        },
+        {
+          "type": "string",
+          "const": ""
+        }
+      ]
+    },
+    "__schema14": {
+      "type": "string"
+    },
+    "__schema15": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 255
+      }
+    },
+    "__schema16": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/__schema4"
+      }
+    },
+    "__schema17": {
+      "maximum": 99999999,
+      "allOf": [
+        {
+          "$ref": "#/definitions/__schema8"
+        }
+      ]
+    },
+    "__schema18": {
+      "type": "boolean"
+    },
+    "__schema19": {
+      "type": "string",
+      "enum": [
+        "all",
+        "any",
+        "none"
+      ]
+    },
+    "__schema20": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/__schema21"
+      }
+    },
+    "__schema21": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "units"
+            },
+            "countBy": {
+              "type": "string",
+              "enum": [
+                "units",
+                "variants"
+              ]
+            },
+            "value": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            "compare": {
+              "$ref": "#/definitions/__schema22"
+            },
+            "source": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/__schema23"
+                }
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "itemSpend"
+            },
+            "value": {
+              "$ref": "#/definitions/__schema24"
+            },
+            "compare": {
+              "$ref": "#/definitions/__schema22"
+            },
+            "source": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/__schema23"
+                }
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "subtotal"
+            },
+            "value": {
+              "$ref": "#/definitions/__schema24"
+            },
+            "compare": {
+              "$ref": "#/definitions/__schema22"
+            }
+          },
+          "required": [
+            "type",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "tag"
+            },
+            "tag": {
+              "$ref": "#/definitions/__schema4"
+            }
+          },
+          "required": [
+            "type",
+            "tag"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "customerOrderCount"
+            },
+            "value": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            "compare": {
+              "$ref": "#/definitions/__schema22"
+            }
+          },
+          "required": [
+            "type",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "shippingCountry"
+            },
+            "value": {
+              "$ref": "#/definitions/__schema14"
+            }
+          },
+          "required": [
+            "type",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "cartAttribute"
+            },
+            "key": {
+              "$ref": "#/definitions/__schema25"
+            },
+            "operator": {
+              "$ref": "#/definitions/__schema26"
+            },
+            "value": {
+              "$ref": "#/definitions/__schema27"
+            }
+          },
+          "required": [
+            "type",
+            "key"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "lineAttribute"
+            },
+            "key": {
+              "$ref": "#/definitions/__schema25"
+            },
+            "operator": {
+              "$ref": "#/definitions/__schema26"
+            },
+            "value": {
+              "$ref": "#/definitions/__schema27"
+            },
+            "source": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/__schema23"
+                }
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "key"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "member"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "mixed"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "group"
+            },
+            "match": {
+              "$ref": "#/definitions/__schema19"
+            },
+            "conditions": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/__schema21"
+              }
+            }
+          },
+          "required": [
+            "type",
+            "match",
+            "conditions"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "__schema22": {
+      "type": "string",
+      "enum": [
+        "gte",
+        "lte",
+        "eq",
+        "lt",
+        "gt"
+      ]
+    },
+    "__schema23": {
+      "type": "object",
+      "properties": {
+        "groupName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "collection": {
+          "$ref": "#/definitions/__schema4"
+        },
+        "variant": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/__schema4"
+            }
+          ]
+        },
+        "tag": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/__schema4"
+            }
+          ]
+        },
+        "metafield": {
+          "type": "object",
+          "properties": {
+            "namespace": {
+              "$ref": "#/definitions/__schema4"
+            },
+            "key": {
+              "$ref": "#/definitions/__schema4"
+            },
+            "value": {
+              "$ref": "#/definitions/__schema4"
+            }
+          },
+          "required": [
+            "namespace",
+            "key",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        "purchase": {
+          "type": "string",
+          "enum": [
+            "any",
+            "once",
+            "subscription"
+          ]
+        },
+        "preorder": {
+          "type": "string",
+          "enum": [
+            "any",
+            "yes",
+            "no"
+          ]
+        }
+      },
+      "required": [
+        "collection",
+        "purchase",
+        "preorder"
+      ],
+      "additionalProperties": false
+    },
+    "__schema24": {
+      "type": "number",
+      "minimum": 0
+    },
+    "__schema25": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "__schema26": {
+      "type": "string",
+      "enum": [
+        "equals",
+        "present",
+        "missing"
+      ]
+    },
+    "__schema27": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/__schema25"
+        }
+      ]
+    },
+    "__schema28": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "family": {
+              "$ref": "#/definitions/__schema29"
+            },
+            "kind": {
+              "$ref": "#/definitions/__schema30"
+            },
+            "priceBasis": {
+              "$ref": "#/definitions/__schema31"
+            },
+            "groupSize": {
+              "$ref": "#/definitions/__schema32"
+            },
+            "scope": {
+              "$ref": "#/definitions/__schema33"
+            },
+            "amount": {
+              "$ref": "#/definitions/__schema34"
+            },
+            "limit": {
+              "$ref": "#/definitions/__schema35"
+            },
+            "order": {
+              "$ref": "#/definitions/__schema36"
+            },
+            "repeat": {
+              "$ref": "#/definitions/__schema37"
+            }
+          },
+          "required": [
+            "family",
+            "kind",
+            "amount",
+            "limit",
+            "order"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "family": {
+              "type": "string",
+              "const": "validation"
+            },
+            "message": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "everyCheckout": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "family",
+            "message"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "family": {
+              "$ref": "#/definitions/__schema38"
+            },
+            "parent": {
+              "$ref": "#/definitions/__schema39"
+            },
+            "mode": {
+              "$ref": "#/definitions/__schema40"
+            },
+            "components": {
+              "$ref": "#/definitions/__schema41"
+            }
+          },
+          "required": [
+            "family",
+            "parent",
+            "components"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "family": {
+              "type": "string",
+              "const": "delivery"
+            },
+            "customization": {
+              "$ref": "#/definitions/__schema43"
+            },
+            "additional": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/__schema43"
+              }
+            }
+          },
+          "required": [
+            "family",
+            "customization"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "family": {
+              "type": "string",
+              "const": "payment"
+            },
+            "customization": {
+              "$ref": "#/definitions/__schema43"
+            },
+            "additional": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/__schema43"
+              }
+            }
+          },
+          "required": [
+            "family",
+            "customization"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "__schema29": {
+      "type": "string",
+      "const": "discount"
+    },
+    "__schema30": {
+      "type": "string",
+      "enum": [
+        "percent",
+        "fixed",
+        "price"
+      ]
+    },
+    "__schema31": {
+      "type": "string",
+      "const": "compareAt"
+    },
+    "__schema32": {
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 2147483647
+    },
+    "__schema33": {
+      "type": "string",
+      "enum": [
+        "items",
+        "order",
+        "shipping"
+      ]
+    },
+    "__schema34": {
+      "type": "number",
+      "minimum": 0
+    },
+    "__schema35": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 2147483647
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "__schema36": {
+      "type": "string",
+      "enum": [
+        "lowest",
+        "highest"
+      ]
+    },
+    "__schema37": {
+      "type": "object",
+      "properties": {
+        "every": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 2147483647
+        },
+        "rewardUnits": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 2147483647
+        },
+        "source": {
+          "$ref": "#/definitions/__schema23"
+        }
+      },
+      "required": [
+        "every",
+        "rewardUnits",
+        "source"
+      ],
+      "additionalProperties": false
+    },
+    "__schema38": {
+      "type": "string",
+      "const": "transform"
+    },
+    "__schema39": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "__schema40": {
+      "type": "string",
+      "enum": [
+        "expand",
+        "merge"
+      ]
+    },
+    "__schema41": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/__schema42"
+      }
+    },
+    "__schema42": {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "$ref": "#/definitions/__schema4"
+        },
+        "quantity": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "variant",
+        "quantity"
+      ],
+      "additionalProperties": false
+    },
+    "__schema43": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "string",
+              "const": "hide"
+            },
+            "target": {
+              "$ref": "#/definitions/__schema44"
+            }
+          },
+          "required": [
+            "operation",
+            "target"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "string",
+              "const": "rename"
+            },
+            "target": {
+              "$ref": "#/definitions/__schema44"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            }
+          },
+          "required": [
+            "operation",
+            "target",
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "string",
+              "const": "move"
+            },
+            "target": {
+              "$ref": "#/definitions/__schema44"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            }
+          },
+          "required": [
+            "operation",
+            "target",
+            "position"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "__schema44": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "__schema45": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/__schema23"
+        }
+      ]
+    },
+    "__schema46": {
+      "type": "object",
+      "properties": {
+        "collection": {
+          "$ref": "#/definitions/__schema4"
+        },
+        "excludeSubscriptions": {
+          "$ref": "#/definitions/__schema18"
+        },
+        "match": {
+          "$ref": "#/definitions/__schema19"
+        },
+        "conditions": {
+          "$ref": "#/definitions/__schema20"
+        },
+        "action": {
+          "$ref": "#/definitions/__schema28"
+        },
+        "target": {
+          "$ref": "#/definitions/__schema45"
+        }
+      },
+      "required": [
+        "collection",
+        "excludeSubscriptions",
+        "match",
+        "conditions",
+        "action"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "title": "Mechanic Function definition v1",
+  "description": "Portable rule and saved checkout examples. Use Review changes in Mechanic for rule semantics and the shop-specific compiler check."
+}

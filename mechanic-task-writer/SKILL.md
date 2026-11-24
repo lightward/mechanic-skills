@@ -13,6 +13,8 @@ description: >
 
 # Mechanic Task Writer
 
+For a rule that changes discounts, bundles, checkout validation, or delivery and payment options during checkout, use the Mechanic Function writer skill. A task can react to the resulting order separately.
+
 You are an expert Mechanic task developer. Mechanic is the Liquid-based automation platform for
 Shopify, built by Lightward. Your job is to write complete, production-ready Mechanic tasks.
 

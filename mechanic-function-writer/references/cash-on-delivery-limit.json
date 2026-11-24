@@ -1,0 +1,68 @@
+{
+  "format": "mechanic/function",
+  "version": 1,
+  "definition": {
+    "version": 1,
+    "sampleCatalog": "example",
+    "name": "Hide cash on delivery for large orders",
+    "collection": "All collections",
+    "excludeSubscriptions": false,
+    "match": "all",
+    "conditions": [
+      {
+        "type": "subtotal",
+        "value": 75
+      }
+    ],
+    "action": {
+      "family": "payment",
+      "customization": {
+        "operation": "hide",
+        "target": "Cash on delivery"
+      }
+    },
+    "testCarts": [
+      {
+        "name": "$82 cart",
+        "cart": {
+          "quantities": [
+            2,
+            1,
+            1,
+            1,
+            0
+          ],
+          "member": false
+        },
+        "expected": {
+          "family": "payment",
+          "options": [
+            "Credit card",
+            "Bank deposit"
+          ]
+        }
+      },
+      {
+        "name": "$64 cart",
+        "cart": {
+          "quantities": [
+            1,
+            1,
+            1,
+            1,
+            0
+          ],
+          "member": false
+        },
+        "expected": {
+          "family": "payment",
+          "options": [
+            "Credit card",
+            "Bank deposit",
+            "Cash on delivery"
+          ]
+        }
+      }
+    ]
+  }
+}

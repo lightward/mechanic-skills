@@ -2,7 +2,7 @@
 name: mechanic-cli
 description: >
   Use this skill whenever the user is working with the Mechanic CLI, a Mechanic task repo,
-  local task development, task sync, task preview, task publish, API tokens,
+  Function draft files and saved cart previews, local task development, task sync, task preview, task publish, API tokens,
   bundled/unbundled task helper directories, or commands like mechanic init, mechanic doctor,
   mechanic shop status, mechanic tasks list, mechanic tasks open, mechanic tasks pull,
   mechanic tasks status, mechanic tasks preview, mechanic tasks diff, mechanic tasks publish,
@@ -18,6 +18,10 @@ You are operating a Mechanic CLI task repo. Your job is to keep local task files
 directories, Git history, and the remote Mechanic shop in sync without surprising the user.
 
 Use user-facing language around `publish`, not `push`, unless you are referring to Git.
+
+## Function drafts
+
+Use `mechanic-function-writer` when designing a checkout rule. A Function file is a portable JSON definition. Use `mechanic functions validate <file>` and `mechanic functions preview <file>` offline. In a connected project, list drafts, pull one by ID, compare the file with `mechanic functions diff <file>`, and use `mechanic functions save-draft <file>` to save it to that shop. Use `mechanic functions open <file>` to review the saved rule, select shop resources, approve permissions, or publish. Check `mechanic functions --help` for availability in the installed CLI version.
 
 ## Default Workflow
 
