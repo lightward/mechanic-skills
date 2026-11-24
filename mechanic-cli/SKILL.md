@@ -7,23 +7,24 @@ description: >
   mechanic shop status, mechanic tasks list, mechanic tasks open, mechanic tasks pull,
   mechanic tasks status, mechanic tasks preview, mechanic tasks diff, mechanic tasks publish,
   mechanic tasks bundle, mechanic tasks unbundle, or mechanic github init.
-  This skill is for safely using the Mechanic CLI with task repos. For writing or debugging
+  Use it for task sync and Function draft management in Mechanic CLI projects. For writing or debugging
   the Liquid task logic itself, use the mechanic-task-writer skill first, then return to this
   skill to preview, diff, and publish.
 ---
 
 # Mechanic CLI
 
-You are operating a Mechanic CLI task repo. Your job is to keep local task files, helper
-directories, Git history, and the remote Mechanic shop in sync without surprising the user.
+Use the Function workflow below for cart and checkout rules. Use the task workflow for Liquid tasks and their helper directories.
 
 Use user-facing language around `publish`, not `push`, unless you are referring to Git.
 
 ## Function drafts
 
-Use `mechanic-function-writer` when designing a checkout rule. A Function file is a portable JSON definition. Use `mechanic functions validate <file>` and `mechanic functions preview <file>` offline. In a connected project, list drafts, pull one by ID, compare the file with `mechanic functions diff <file>`, and use `mechanic functions save-draft <file>` to save it to that shop. Use `mechanic functions open <file>` to review the saved rule, select shop resources, approve permissions, or publish. Check `mechanic functions --help` for availability in the installed CLI version.
+Use `mechanic-function-writer` when designing a checkout rule. A Function file is a portable JSON definition. Use `mechanic functions validate <file>` and `mechanic functions preview <file>` offline. In a connected project, list drafts, pull one by ID, compare the file with `mechanic functions diff <file>`, and use `mechanic functions save-draft <file>` to save it to that shop. Use `mechanic functions open <file>` to review the saved rule, select shop resources, approve permissions, or publish. A linked Function file keeps its connection by shop, API host, and project-relative path. Pull the existing draft before editing it on a new machine, and keep using its linked file. Running `save-draft` on an unlinked file creates a draft. The Function commands require CLI 0.2.0 or later. Check `mechanic functions --help` for availability.
 
-## Default Workflow
+When checking a proposed edit against the shop, use `mechanic functions preview <file> --shop` and `mechanic functions validate <file> --shop`. For a request to publish an already-saved Function on a shop enabled for CLI publishing, review the preview and `mechanic functions publish <file> --dry-run`. An explicit publication request authorizes `mechanic functions publish <file>`. Retry an interrupted publication from the same file and project to reuse the request ID.
+
+## Task workflow
 
 First check whether the repo is initialized.
 

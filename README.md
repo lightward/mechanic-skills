@@ -9,7 +9,7 @@ These skills work with any coding agent that supports the [Agent Skills](https:/
 | Skill | Description |
 |-------|-------------|
 | [mechanic-task-writer](./mechanic-task-writer/) | Write, edit, debug, and optimize Mechanic tasks with production-ready patterns, GraphQL queries, and bulk operations |
-| [mechanic-cli](./mechanic-cli/) | Use the Mechanic CLI to create, pull, preview, diff, check status, and publish task repos safely |
+| [mechanic-cli](./mechanic-cli/) | Manage local tasks and Function drafts, preview changes, and sync with a Mechanic shop |
 | [mechanic-function-writer](mechanic-function-writer/SKILL.md) | Write a discount, bundle, checkout validation, delivery or payment rule and test it with sample carts. |
 
 ## Installation
@@ -28,6 +28,12 @@ npx skills add lightward/mechanic-skills --skill mechanic-task-writer
 
 ```bash
 npx skills add lightward/mechanic-skills --skill mechanic-cli
+```
+
+For the Function writer, run this in your local fish terminal:
+
+```fish
+npx skills add lightward/mechanic-skills --skill mechanic-function-writer
 ```
 
 Or manually copy the skill folder to your agent's skills directory:
