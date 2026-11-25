@@ -1,0 +1,74 @@
+{
+  "format": "mechanic/function",
+  "version": 1,
+  "definition": {
+    "version": 1,
+    "sampleCatalog": "example",
+    "name": "Two-item bundle",
+    "collection": "All collections",
+    "excludeSubscriptions": false,
+    "match": "all",
+    "conditions": [],
+    "action": {
+      "family": "transform",
+      "parent": "Bundle parent",
+      "components": [
+        {
+          "variant": "First component",
+          "quantity": 1
+        },
+        {
+          "variant": "Second component",
+          "quantity": 1
+        }
+      ]
+    },
+    "testCarts": [
+      {
+        "name": "Two-item bundle",
+        "cart": {
+          "quantities": [
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "member": false
+        },
+        "expected": {
+          "family": "transform",
+          "mode": "expand",
+          "components": [
+            {
+              "variant": "First component",
+              "quantity": 1
+            },
+            {
+              "variant": "Second component",
+              "quantity": 1
+            }
+          ]
+        }
+      },
+      {
+        "name": "Components only",
+        "cart": {
+          "quantities": [
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "member": false
+        },
+        "expected": {
+          "family": "transform",
+          "mode": null,
+          "components": []
+        }
+      }
+    ]
+  }
+}

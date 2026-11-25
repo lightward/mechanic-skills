@@ -1,0 +1,78 @@
+{
+  "format": "mechanic/function",
+  "version": 1,
+  "definition": {
+    "version": 1,
+    "sampleCatalog": "example",
+    "name": "Three items for $30",
+    "collection": "Eligible collection",
+    "excludeSubscriptions": true,
+    "match": "all",
+    "conditions": [],
+    "action": {
+      "family": "discount",
+      "kind": "price",
+      "amount": 30,
+      "limit": null,
+      "order": "lowest",
+      "groupSize": 3
+    },
+    "testCarts": [
+      {
+        "name": "3 qualifying items",
+        "cart": {
+          "quantities": [
+            2,
+            1,
+            0,
+            0,
+            0
+          ],
+          "member": false
+        },
+        "expected": {
+          "family": "discount",
+          "cents": 2000
+        }
+      },
+      {
+        "name": "2 qualifying items",
+        "cart": {
+          "quantities": [
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "member": false
+        },
+        "expected": {
+          "family": "discount",
+          "cents": 0
+        }
+      },
+      {
+        "name": "4 qualifying items",
+        "cart": {
+          "quantities": [
+            3,
+            1,
+            0,
+            0,
+            0
+          ],
+          "member": false
+        },
+        "expected": {
+          "family": "discount",
+          "cents": 2000
+        }
+      }
+    ],
+    "promotion": {
+      "method": "automatic",
+      "shopperLabel": "Bundle savings"
+    }
+  }
+}

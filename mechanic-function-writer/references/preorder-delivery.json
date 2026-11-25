@@ -1,0 +1,67 @@
+{
+  "format": "mechanic/function",
+  "version": 1,
+  "definition": {
+    "version": 1,
+    "sampleCatalog": "example",
+    "name": "Hide express for mixed preorders",
+    "collection": "All collections",
+    "excludeSubscriptions": false,
+    "match": "all",
+    "conditions": [
+      {
+        "type": "mixed"
+      }
+    ],
+    "action": {
+      "family": "delivery",
+      "customization": {
+        "operation": "hide",
+        "target": "Express"
+      }
+    },
+    "testCarts": [
+      {
+        "name": "Mixed cart",
+        "cart": {
+          "quantities": [
+            2,
+            1,
+            1,
+            1,
+            0
+          ],
+          "member": false
+        },
+        "expected": {
+          "family": "delivery",
+          "options": [
+            "Standard",
+            "Store pickup"
+          ]
+        }
+      },
+      {
+        "name": "Regular items only",
+        "cart": {
+          "quantities": [
+            2,
+            0,
+            1,
+            1,
+            0
+          ],
+          "member": false
+        },
+        "expected": {
+          "family": "delivery",
+          "options": [
+            "Standard",
+            "Express",
+            "Store pickup"
+          ]
+        }
+      }
+    ]
+  }
+}

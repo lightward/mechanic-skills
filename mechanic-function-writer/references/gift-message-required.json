@@ -1,0 +1,78 @@
+{
+  "format": "mechanic/function",
+  "version": 1,
+  "definition": {
+    "version": 1,
+    "sampleCatalog": "example",
+    "name": "Require a gift message for wrapped items",
+    "collection": "All collections",
+    "excludeSubscriptions": false,
+    "match": "all",
+    "conditions": [
+      {
+        "type": "lineAttribute",
+        "key": "gift_wrap",
+        "operator": "equals",
+        "value": "yes"
+      },
+      {
+        "type": "cartAttribute",
+        "key": "gift_message",
+        "operator": "missing"
+      }
+    ],
+    "action": {
+      "family": "validation",
+      "message": "Add a gift message for your gift-wrapped order."
+    },
+    "testCarts": [
+      {
+        "name": "Message missing",
+        "cart": {
+          "quantities": [
+            2,
+            1,
+            1,
+            1,
+            0
+          ],
+          "member": false,
+          "lineAttributes": [
+            {
+              "gift_wrap": "yes"
+            }
+          ]
+        },
+        "expected": {
+          "family": "validation",
+          "message": "Add a gift message for your gift-wrapped order."
+        }
+      },
+      {
+        "name": "Message added",
+        "cart": {
+          "quantities": [
+            2,
+            1,
+            1,
+            1,
+            0
+          ],
+          "member": false,
+          "lineAttributes": [
+            {
+              "gift_wrap": "yes"
+            }
+          ],
+          "cartAttributes": {
+            "gift_message": "Happy birthday!"
+          }
+        },
+        "expected": {
+          "family": "validation",
+          "message": null
+        }
+      }
+    ]
+  }
+}
