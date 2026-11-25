@@ -69,6 +69,10 @@
           "cents": 2000
         }
       }
-    ]
+    ],
+    "promotion": {
+      "method": "automatic",
+      "shopperLabel": "Bundle savings"
+    }
   }
 }
